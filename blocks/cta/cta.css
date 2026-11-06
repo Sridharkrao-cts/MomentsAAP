@@ -132,7 +132,7 @@ main .cta-row > .text-wrapper {
 
   /* same 1301px column as the product grid */
   main > .section > .cta-row,
-  main > .section > .products-cards-wrapper {
+  main > .section > .products-wrapper:has(> .products.collection) {
     max-width: 1301px;
     margin-inline: auto;
   }
