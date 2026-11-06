@@ -1,4 +1,5 @@
-/* Sort block: right-aligned "Sort: Price: Low to High ▾" pill + themed dropdown list */
+/* Sort block: right-aligned "SORT BY ▾" button (design: 118 x 43) + dropdown list.
+   Same look as the Products "View more" button: square, black outline, uppercase. */
 .sort {
   display: flex;
   justify-content: flex-end;
@@ -14,24 +15,38 @@
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 40px; /* same height as the products toolbar row, so they line up */
+  justify-content: center;
+  gap: 8px;
+  width: 118px; /* design: 118 x 43 */
+  height: 43px;
   margin: 0;
-  padding: 0 14px;
-  border: 1px solid #ddd;
-  border-radius: 999px;
+  padding: 0 12px;
+  border: 1px solid #111;
+  border-radius: 0;
   background-color: #fff;
   font: inherit;
-  font-size: var(--body-font-size-s);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--text-color);
   cursor: pointer;
   user-select: none; /* no text selection / text cursor when clicked */
   -webkit-tap-highlight-color: transparent;
 }
 
-.sort .sort-button:hover,
 .sort .sort-menu.is-open .sort-button {
-  border-color: #333;
+  background-color: #111;
+  color: #fff;
+}
+
+/* Hover fill only with a mouse; touch screens would keep it "stuck" after a tap */
+@media (hover: hover) {
+  .sort .sort-button:hover {
+    background-color: #111;
+    color: #fff;
+  }
 }
 
 .sort .sort-button:focus-visible {
@@ -39,15 +54,8 @@
   outline-offset: 2px;
 }
 
-.sort .sort-label {
-  color: #6b6b6b;
-}
-
-.sort .sort-value {
-  font-weight: 600;
-}
-
 .sort .sort-button svg {
+  flex: none;
   width: 16px;
   height: 16px;
   fill: none;
@@ -58,20 +66,24 @@
   transition: transform 0.2s ease;
 }
 
-.sort .sort-menu.is-open .sort-button svg {
+.sort .sort-menu.is-open .sort-chevron {
   transform: rotate(180deg);
+}
+
+/* The ⇅ icon is for the mobile round button only */
+.sort .sort-icon {
+  display: none;
 }
 
 .sort .sort-list {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 4px);
   right: 0;
   min-width: 100%;
   margin: 0;
-  padding: 6px;
+  padding: 0;
   list-style: none;
-  border: 1px solid #ddd;
-  border-radius: 12px;
+  border: 1px solid #111;
   background-color: #fff;
   box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
   white-space: nowrap;
@@ -87,19 +99,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 12px 20px;
   font-size: var(--body-font-size-s);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--text-color);
   cursor: pointer;
 }
 
 .sort .sort-option.is-active {
-  background-color: #f4f4f5;
+  background-color: #111;
+  color: #fff;
 }
 
 .sort .sort-option[aria-selected='true'] {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .sort .sort-option svg {
@@ -115,4 +130,94 @@
 
 .sort .sort-option[aria-selected='true'] svg {
   visibility: visible;
+}
+
+/* The selected option is not shown on the button (design: just "SORT BY ⌄");
+   it stays in the button for screen readers */
+.sort .sort-value {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.sort .sort-button {
+  white-space: nowrap; /* never wrap onto a second line */
+}
+
+/* ---------- Mobile & tablet (all sizes below 900px) ---------- */
+@media (width < 900px) {
+  /* Round 48px icon button with the ⇅ icon, light grey, no border (design).
+     ".sort.block ... button" outranks the 12px padding set for this row in styles.css. */
+  .sort.block .sort-menu button.sort-button {
+    flex: none; /* never squashed: always a perfect 48px circle */
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: #eef0f5;
+    color: #111;
+  }
+
+  .sort.block .sort-menu.is-open button.sort-button {
+    background-color: #dfe2ea;
+    color: #111;
+  }
+
+  .sort .sort-button .sort-icon { /* beats the generic 16px ".sort-button svg" */
+    display: block;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    stroke-width: 2;
+  }
+
+  /* No text or chevron on the round button; "Sort by" stays for screen readers */
+  .sort .sort-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sort .sort-chevron {
+    display: none;
+  }
+
+  /* The open list: same small text as the button, never wider than the screen.
+     sort.js nudges it sideways if it would cross a screen edge. */
+  .sort .sort-list {
+    min-width: 100%;
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
+  }
+
+  .sort .sort-option {
+    box-sizing: border-box;
+    min-height: 40px; /* comfortable tap target */
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  .sort .sort-option > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis; /* only on the very narrowest screens */
+  }
+
+  .sort .sort-option svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
 }

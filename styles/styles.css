@@ -324,59 +324,229 @@ main .section.highlight {
   padding: 40px 0;
 }
 
-main .section.plp-layout {
-display: grid;
-gap: 24px;
-max-width: 1200px;
-margin: 0 auto;
-padding: 0 16px;
-}
- 
-/* EDS gives every section child its own max-width and auto margins; reset them here */
-main .section.plp-layout > div {
-max-width: none;
-margin: 0;
-padding: 0;
-min-width: 0;
+/* ==========================================================================
+   Category banner (Banner block) on top of the product listing page.
+   Put the Banner block alone in the FIRST section of the page, above the section that has
+   the Sort / Filter / Products blocks (style "plp-layout"). EDS marks that section with the
+   class "banner-container". The banner runs edge to edge (the content below is narrower),
+   then there is a 28px gap before the "Showing 1-24 of N products" row.
+   ========================================================================== */
+main .section.banner-container {
+  margin: 0 0 28px;
 }
 
-/* Sort block in the PLP: the section gap already spaces it (mobile: its own row,
-   right-aligned, between Filter and Products) */
-main .section.plp-layout > .sort-wrapper .sort {
+/* Remove the 1200px width limit and side padding that every section gets above */
+main .section.banner-container > div {
+  max-width: none;
   margin: 0;
+  padding: 0;
+}
+
+/* ==========================================================================
+   Product listing page (below the banner): Sort + Filter + Products blocks in ONE section with
+   the style "plp-layout" (Section Metadata: Style | plp-layout). Block order
+   in the document does not matter.
+
+   Desktop (>= 900px)                           Mobile (no count text)
+   +-------------------------------------+      +--------------------------+
+   | Showing 1-24 of N          [SORT v] |      |             (filter)[SORT]|
+   +-----------+-------------------------+      | (filter panel, if open)  |
+   |  FILTER   |  cards  cards  cards    |      | cards                    |
+   |  sections |  cards  cards  cards    |      | ------------------------ |
+   |           |                         |      |              [VIEW MORE] |
+   +-----------+-------------------------+      +--------------------------+
+   |  ------------ divider ------------- |
+   |                       [VIEW MORE]   |
+   +-------------------------------------+
+   ========================================================================== */
+main .section.plp-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto; /* mobile: (empty) | Filters | Sort */
+  column-gap: 8px;
+  max-width: 1300px; /* Figma: 70px page margins at 1440; 299 filter + 28 gap + 3 x 318 cards + gaps */
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* EDS gives every section child its own max-width and auto margins; reset them here */
+main .section.plp-layout > div {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+/* The Products wrapper and block "step aside", so their three parts (the count text,
+   the card grid and the View more row) become cells of THIS grid. That is what lets the
+   cards start level with the filter sections and the divider run full width. */
+main .section.plp-layout .products-wrapper,
+main .section.plp-layout .products {
+  display: contents;
+}
+
+main .section.plp-layout .products-toolbar {
+  grid-area: 1 / 1 / 2 / -1;
+  align-self: start;
+}
+
+/* Removes the small text-baseline gap under the Sort button, so it lines up exactly
+   with the Filters button and the count text */
+main .section.plp-layout .sort-menu {
+  display: flex;
+}
+
+main .section.plp-layout .sort-wrapper {
+  position: relative;
+  z-index: 3; /* above the count text, and its open list above the cards */
+  align-self: start;
+  justify-self: end;
+}
+
+/* Mobile: [Filters][Sort] / filter panel (when open) / cards / View more */
+@media (width < 900px) {
+  /* The Filter wrapper and block step aside too, so the button and the panel are
+     separate cells: the button sits beside Sort, the panel spans the full width. */
+  main .section.plp-layout .filter-wrapper,
+  main .section.plp-layout .filter {
+    display: contents;
+  }
+
+  /* The round Filters button sits at the right, just before the Sort button */
+  main .section.plp-layout .filter-toggle {
+    grid-area: 2 / 2;
+    align-self: start;
+    justify-self: end;
+  }
+
+  main .section.plp-layout .sort-wrapper {
+    grid-area: 2 / 3;
+  }
+
+  main .section.plp-layout .filter-panel {
+    grid-area: 3 / 1 / 4 / -1;
+    margin-top: 0; /* the Sort block's bottom margin already spaces it */
+  }
+
+  main .section.plp-layout .products-grid {
+    grid-area: 4 / 1 / 5 / -1;
+  }
+
+  main .section.plp-layout .products-more {
+    grid-area: 5 / 1 / 6 / -1;
+  }
+
+main .section.plp-layout .products-toolbar {
+    grid-area: 2 / 1;
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    align-self: center;
+  }
+  /* Small size from the design so the Sort button fits beside the round Filters button */
+  main .section.plp-layout .sort-button {
+    padding: 0 12px;
+    font-size: 13px;
+  }
 }
 
 @media (width >= 900px) {
   main .section.plp-layout {
-    grid-template-columns: 260px minmax(0, 1fr);
-    gap: 40px;
+    grid-template-columns: 299px minmax(0, 1fr); /* filter cards are 299px wide in the design */
+    grid-template-rows: 68px auto auto; /* row 1 = count text + Sort; the filter and cards start under it */
+    column-gap: 28px; /* space between the filter cards and the product cards (Figma) */
     padding: 0 24px;
   }
 
-  /* Filter | Sort | Products: the filter is the left column; the Sort block shares
-     the products' cell, top right, on the "Showing 1-24 of N products" row */
-  main .section.plp-layout > .filter-wrapper {
+  /* Row 1: count text on the left, Sort button on the right, same line */
+  main .section.plp-layout .products-toolbar,
+  main .section.plp-layout .sort-wrapper {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+
+  /* Row 2: the filter sections (left) and the cards (right) start on the same line */
+  main .section.plp-layout .filter-wrapper {
+    grid-area: 2 / 1 / 3 / 2;
+  }
+
+  main .section.plp-layout .products-grid {
+    grid-area: 2 / 2 / 3 / 3;
+  }
+
+  /* Row 3: divider + View more across the full width, under the filter too */
+  main .section.plp-layout .products-more {
+    grid-area: 3 / 2 / 4 / 3; /* Places it strictly in column 2 under the product cards */
+  }
+}
+
+/*pdp*/
+/* visually hidden text for screen readers */
+.pdp-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+ 
+/* product page (Section Metadata: Style = pdp-top): one column on phone and tablet */
+main .section.pdp-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: min-content;
+  padding: 0 16px;
+}
+ 
+main .section.pdp-top > div {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+ 
+/* no discount badge: the heart and the title share one row */
+main .section.pdp-top.pdp-no-discount > .product-discount-heart-wrapper,
+main .section.pdp-top.pdp-no-discount > .product-title-price-wrapper {
+  grid-row: 2;
+}
+ 
+main .section.pdp-top.pdp-no-discount > .product-discount-heart-wrapper {
+  z-index: 1;
+  place-self: start end;
+}
+ 
+/* the try-on note sits 30px under Add to Bag and 46px above the reviews */
+main .section.pdp-top .try-on-info {
+  margin: 30px 0 46px;
+}
+ 
+/* desktop: 1440 frame, gallery 772 + 21 gap + details 507, 70 on each side */
+@media (width >= 900px) {
+  main .section.pdp-top {
+    grid-template-columns: minmax(0, 772fr) minmax(0, 507fr);
+    grid-template-rows: repeat(7, min-content) 1fr;
+    column-gap: 21px;
+    max-width: 1440px;
+    margin: 40px auto;
+    padding: 0 70px;
+  }
+ 
+  main .section.pdp-top > div {
+    grid-column: 2;
+  }
+ 
+  main .section.pdp-top > .product-gallery-wrapper {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 1 / -1;
   }
-
-  main .section.plp-layout > .products-wrapper {
-    grid-column: 2;
+ 
+  main .section.pdp-top.pdp-no-discount > .product-discount-heart-wrapper,
+  main .section.pdp-top.pdp-no-discount > .product-title-price-wrapper {
     grid-row: 1;
-  }
-
-  main .section.plp-layout > .sort-wrapper {
-    position: relative;
-    z-index: 3; /* above the products block, so the pill stays clickable */
-    grid-column: 2;
-    grid-row: 1;
-    align-self: start;
-    justify-self: end;
-    padding: 24px 24px 0 0; /* matches the products block padding */
-  }
-
-  /* keep the result count clear of the Sort pill */
-  main .section.plp-layout:has(> .sort-wrapper) .products-toolbar {
-    padding-right: 240px;
   }
 }

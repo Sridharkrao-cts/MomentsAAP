@@ -10,7 +10,11 @@ import {
   loadSections,
   loadCSS,
   buildBlock,
+  decorateBlock,
+  loadBlock,
+  getMetadata,
 } from './aem.js';
+//import createBreadcrumb from './breadcrumb.js';
 
 if (window.trustedTypes && window.trustedTypes.createPolicy) {
   const innerTT = window.trustedTypes.createPolicy('tt-inner', {
@@ -165,6 +169,9 @@ async function loadEager(doc) {
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);
+    // after sections are decorated (so `.breadcrumb-container` exists) and
+    // before the body is shown, so the breadcrumb causes no layout shift
+    //createBreadcrumb(doc);
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);
   }
@@ -180,11 +187,49 @@ async function loadEager(doc) {
 }
 
 /**
+* Loads the header block into the <header>, selecting the block by the page's
+* `header` metadata. Defaults to the "try-on-header" block on every page (like
+* the footer); set metadata `header: header` (per page or via a bulk /metadata
+* sheet) to fall back to the standard boilerplate header block instead.
+* @param {Element} header The header element
+* @returns {Promise}
+*/
+async function loadHeaderBlock(header) {
+  const headerBlockName = getMetadata('header') || 'try-on-header';
+  if (headerBlockName === 'try-on-header') {
+    const block = buildBlock('try-on-header', '');
+    header.append(block);
+    decorateBlock(block);
+    return loadBlock(block);
+  }
+  return loadHeader(header);
+}
+ 
+/**
+* Loads the footer block into the <footer>, selecting the block by the page's
+* `footer` metadata. Defaults to the "try-on-footer" block on every page (like
+* the header); set metadata `footer: footer` (per page or via a bulk /metadata
+* sheet) to fall back to the standard boilerplate footer block instead.
+* @param {Element} footer The footer element
+* @returns {Promise}
+*/
+async function loadFooterBlock(footer) {
+  const footerBlockName = getMetadata('footer') || 'try-on-footer';
+  if (footerBlockName === 'try-on-footer') {
+    const block = buildBlock('try-on-footer', '');
+    footer.append(block);
+    decorateBlock(block);
+    return loadBlock(block);
+  }
+  return loadFooter(footer);
+}
+ 
+/**
  * Loads everything that doesn't need to be delayed.
  * @param {Element} doc The container element
  */
 async function loadLazy(doc) {
-  loadHeader(doc.querySelector('body > header'));
+  loadHeaderBlock(doc.querySelector('body > header'));
 
   const main = doc.querySelector('main');
   await loadSections(main);
@@ -193,7 +238,7 @@ async function loadLazy(doc) {
   const element = hash ? doc.getElementById(hash.substring(1)) : false;
   if (hash && element) element.scrollIntoView();
 
-  loadFooter(doc.querySelector('body > footer'));
+  loadFooterBlock(doc.querySelector('body > footer'));
 
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
