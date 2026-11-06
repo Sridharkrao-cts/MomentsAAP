@@ -1,121 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
 .products {
   --products-gap: 20px;
-
-  container-type: inline-size;
-  padding: 16px;
-  border-radius: 12px;
-  background-color: #f4f4f5;
 }
 
-@media (width >= 600px) {
-  .products {
-    padding: 24px;
-  }
-}
-
-/* Toolbar: stacked on mobile (count, then sort right-aligned),
-   single row on tablet/desktop (count left, sort right). */
+/* Toolbar: the "Showing 1-24 of N products" text. min-height is the Sort button's height
+   so the text and the button line up on the same row. */
 .products .products-toolbar {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-
-  /* Reserve the Sort pill's height (it overlays this row on desktop) and leave a
-     clear gap below, so the first row of cards sits well clear of it. */
+  align-items: center;
   min-height: 40px;
-  margin-bottom: 28px;
-}
-
-.products .products-toolbar .products-sort {
-  align-self: flex-end;
-}
-
-@container (width >= 480px) {
-  .products .products-toolbar {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .products .products-toolbar .products-sort {
-    align-self: auto;
-  }
+  margin-bottom: 16px;
 }
 
 .products .products-result-count {
   margin: 0;
-  font-size: var(--body-font-size-s);
-  color: #6b6b6b;
-}
-
-/* Sort pill: "Sort: Popular ▾" */
-.products .products-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid #ddd;
-  border-radius: 999px;
-  background-color: #fff;
-}
-
-.products .products-sort-label {
-  font-size: var(--body-font-size-s);
-  color: #6b6b6b;
-}
-
-.products .products-sort-select {
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: var(--body-font-size-s);
-  font-weight: 600;
+  font-size: 16px;
   color: var(--text-color);
-  cursor: pointer;
-  padding-right: 4px;
 }
 
-.products .products-sort-select:focus-visible {
-  outline: 2px solid var(--link-color);
-  outline-offset: 2px;
-}
-
-/* Grid: columns driven by the block's own width (works beside a filter column) */
+/* Grid (Figma): cards are 318 wide, 9px apart, rows 48px apart.
+   Mobile: two cards per row, 9px apart, rows 16px apart. */
 .products .products-grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--products-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 9px;
 }
 
-/* Stay 3-up across desktop and tablet (incl. inside the narrower
-   right-hand column beside the filter), collapse to 1-up on mobile.
-   Cards fill the row evenly (no leftover space on the right). */
-@container (width >= 480px) {
+/* Tablet/desktop: always 3 cards per row. Columns are 318px (design width) when there is
+   room, and shrink evenly when there isn't (e.g. beside the filter).
+   (A media query, not a container query: inside the page grid the block has no box of its own.) */
+@media (width >= 600px) {
   .products .products-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 318px));
+    justify-content: space-between;
+    gap: 48px 9px;
   }
 }
 
-/* Card: image (heart + optional Try On on top) / title / prices / stars */
+/* Card (design: 318 wide, height hugs the content): image / title / price / rating / try-on.
+   Spacing (Figma): image to title 20, title to price 11, price to rating 6, rating to button 20.
+   These are measured from the letters, so they are a little different from the box gaps below. */
 .products .products-card {
-  position: relative; /* the title link stretches over the whole card */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
 
 .products .products-card-media {
   position: relative;
+  flex: none;
+}
+
+/* The product image is a link to the product page */
+.products .products-card-image-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
 }
 
 .products .products-card-image {
   position: relative;
-  aspect-ratio: 4 / 5;
-  border-radius: 12px;
+  width: 100%; /* "Fill": always the full card width */
+  aspect-ratio: 318 / 449; /* design: 318 fill x 449 (same ratio on narrower cards) */
   overflow: hidden;
-  background-color: #e9e9ea;
+  background-color: #f3f4f6;
 }
 
 /* Placeholder shown when there is no image, or the image fails to load */
@@ -138,61 +91,34 @@
   object-fit: cover;
 }
 
-/* Wishlist heart (dummy), top right of the image */
-.products .products-card-wishlist {
-  position: absolute;
-  z-index: 2;
-  top: 12px;
-  right: 12px;
+/* Try-on button (dummy), tryOn = TRUE only. Figma: 44px tall, as wide as its content (165 with
+   "TRY THE LOOK"), lime green, condensed bold capitals. The text comes from DA.live. */
+.products .products-card-tryon {
+  box-sizing: border-box;
+  align-self: flex-start; /* content-sized, left-aligned (not full width) */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
+  gap: 14px;
+  height: 44px;
+  margin-top: 4px; /* 16px card gap + 4px = 20px under the rating row */
+  padding: 0 16px;
   border: 0;
-  border-radius: 50%;
-  background-color: #fff;
-  cursor: pointer;
-}
-
-.products .products-card-wishlist svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: #111;
-  stroke-width: 2;
-}
-
-.products .products-card-wishlist:hover svg {
-  fill: #111;
-}
-
-/* "Try On" pill (dummy), bottom centre of the image. Only rendered for tryOn = TRUE. */
-.products .products-card-tryon {
-  position: absolute;
-  z-index: 2;
-  bottom: 12px;
-  left: 50%;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border: 0;
-  border-radius: 999px;
-  background-color: var(--products-tryon, #c9f270);
-  color: #111;
-  font: inherit;
-  font-size: var(--body-font-size-s, 14px);
+  background-color: #C1F377;
+  color: #0e0e0e;
+  font-family: var(--heading-font-family);
+  font-size: 16px;
   font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
   white-space: nowrap;
-  transform: translateX(-50%);
   cursor: pointer;
 }
 
 .products .products-card-tryon svg {
-  width: 18px;
-  height: 18px;
+  flex: none;
+  width: 28px;
+  height: 28px;
   fill: currentcolor;
 }
 
@@ -200,99 +126,142 @@
   filter: brightness(0.95);
 }
 
-.products .products-card-wishlist:focus-visible,
-.products .products-card-tryon:focus-visible {
-  outline: 2px solid var(--link-color, #035fe6);
-  outline-offset: 2px;
-}
-
-/* Body */
+/* Body, tightly stacked: title / price row / rating row */
 .products .products-card-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 12px;
+  gap: 2px;
 }
 
+/* Title (Figma): regular weight, 16px, line height 130%, near-black */
 .products .products-card-title {
   margin: 0;
-  font-size: var(--body-font-size-s, 14px);
-  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: #0e0e0e;
+  font-family: 'Inter';
 }
 
+/* The title is a link to the product page. At most 2 lines on desktop (one line with "..." on
+   mobile), so long titles can't push the card taller. (The clamp is on the link itself, not on
+   its parent: a parent with overflow: hidden would cut off the keyboard focus ring.) */
 .products .products-card-link {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
   color: inherit;
   text-decoration: none;
-}
-
-/* Invisible layer that makes the whole card clickable (buttons sit above it) */
-.products .products-card-link::after {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  inset: 0;
 }
 
 .products .products-card-link:hover {
   text-decoration: underline;
 }
 
-.products .products-card-link:focus-visible {
-  outline: none;
-}
-
-.products .products-card-link:focus-visible::after {
+/* Keyboard focus: the same visible ring on every interactive part of the card
+   (image link, title link, reviews button, try-on button) */
+.products .products-card-image-link:focus-visible,
+.products .products-card-link:focus-visible,
+.products .products-card-reviews:focus-visible,
+.products .products-card-tryon:focus-visible {
   outline: 2px solid var(--link-color, #035fe6);
-  outline-offset: 3px;
-  border-radius: 12px;
+  outline-offset: 2px;
 }
 
-/* Prices: "$49.00" bold, "$65.00" grey */
+/* Price row (Figma): "$76.00"  "$95"  [-20%], vertically centred on one line */
 .products .products-card-prices {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
 }
 
-.products .products-card-price {
-  font-weight: 700;
-  font-size: var(--body-font-size-m, 16px);
-  color: var(--text-color);
-}
-
+/* Price: condensed bold 32px, line height 100%, letter spacing -2% */
+.products .products-card-price,
 .products .products-card-was {
-  font-weight: 400;
-  font-size: var(--body-font-size-s, 14px);
-  color: #8a8a8a;
+  font-family: var(--heading-font-family);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #0e0e0e;
 }
 
-/* Rating: orange stars filled up to --rating (set from JS), then "156 reviews" */
+/* On sale: the original price, crossed out, in grey */
+.products .products-card-was {
+  color: #7d7d7d;
+  text-decoration: line-through;
+}
+
+/* Discount badge: yellow, 70 x 24 (padding 6px 13px, min width 70). The percentage is
+   worked out in JS from price and salePrice. */
+.products .products-card-discount {
+  box-sizing: border-box;
+  min-width: 70px;
+  padding: 6px 13px;
+  background-color: #fcf55e;
+  color: #0e0e0e;
+  font-family:'Inter';
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Rating row (Figma): 18px tall; five orange stars, then "206 reviews" in grey */
 .products .products-card-rating {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: 8px;
+  min-height: 18px;
 }
 
+/* "206 reviews" is a button (future: open the reviews). It looks like plain grey text.
+   The padding makes the clickable area at least 24px tall (WCAG 2.5.8) and the negative
+   margin cancels it out, so the card layout does not move. */
+.products .products-card-reviews {
+  margin: -5px 0;
+  padding: 5px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: #6b6b6b;
+  cursor: pointer;
+  font-family: 'Inter';
+}
+
+.products .products-card-reviews:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Stars: drawn with a mask so the size is exact (5 stars = 77px wide). The orange fill
+   stops at --rating / 5 (set from JS), the rest is grey. */
 .products .products-card-stars {
+  --star-size: 15.4px;
   --star-on: var(--products-star, #ff7a4d);
   --star-off: #d9d9d9;
   --fill: calc(var(--rating, 0) / 5 * 100%);
 
-  display: inline-block;
-  font-size: 18px;
-  line-height: 1;
-  letter-spacing: 2px;
-  background: linear-gradient(90deg, var(--star-on) var(--fill), var(--star-off) var(--fill));
-  background-clip: text;
-  -webkit-background-clip: text;
+  flex: none;
+  display: block;
+  width: calc(var(--star-size) * 5);
+  height: var(--star-size);
+  font-size: 0; /* the ★★★★★ text is only a fallback for the label; the mask draws the stars */
   color: transparent;
-  -webkit-text-fill-color: transparent;
-}
-
-.products .products-card-reviews {
-  font-size: var(--body-font-size-s, 14px);
-  color: var(--products-reviews, #8b6cf0);
+  background: linear-gradient(90deg, var(--star-on) var(--fill), var(--star-off) var(--fill));
+  -webkit-mask: var(--star-mask) 0 0 / var(--star-size) var(--star-size) repeat-x;
+  mask: var(--star-mask) 0 0 / var(--star-size) var(--star-size) repeat-x;
+  --star-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 26 26'%3E%3Cpath d='M12 2l3 6.5 7 .9-5.2 4.8 1.4 7L12 17.8l-6.2 3.4 1.4-7L2 9.4l7-.9z'/%3E%3C/svg%3E");
 }
 
 /* Text for screen readers only */
@@ -305,46 +274,58 @@
   white-space: nowrap;
 }
 
-/* Pagination: Previous / page info / Next */
-.products .products-pagination {
+.products .products-more {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 20px;
+  width: 100%;
   margin-top: calc(var(--products-gap) * 1.6);
   padding-top: var(--products-gap);
-  border-top: 1px solid #dcdcdc;
+  box-sizing: border-box;
+  
+  /* Forces it to stay bounded within the grid width */
+  grid-column: 1 / -1; 
+}
+.products .products-more[hidden] {
+  display: none;
 }
 
-.products .products-page-info {
-  font-size: var(--body-font-size-s);
-  color: #6b6b6b;
-}
-
-.products .products-page-btn {
+/* Full-width relative to the products grid, non-clickable CTA */
+.products .products-more-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border: 1px solid #ddd;
-  border-radius: 999px;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #111;
   background-color: #fff;
   font: inherit;
-  font-size: var(--body-font-size-s);
-  font-weight: 600;
-  color: var(--text-color);
-  cursor: pointer;
+  font-family: var(--heading-font-family, inherit);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #111;
+
+  /* Non-clickable / disabled state */
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
 }
 
-.products .products-page-btn:hover:not(:disabled) {
-  border-color: #333;
+/* Ensure hover does not alter visual state */
+.products .products-more-btn:hover,
+.products .products-more-btn:focus,
+.products .products-more-btn:active {
+  background-color: #fff;
+  color: #111;
 }
 
-.products .products-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.products .products-more-btn svg {
+  width: 16px;
+  height: 16px;
 }
-
 /* Shown when the selected filters match nothing */
 .products .products-empty {
   grid-column: 1 / -1;
@@ -353,4 +334,76 @@
   text-align: center;
   font-size: var(--body-font-size-s);
   color: #6b6b6b;
+}
+
+/* Small screens (Figma mobile): two narrow cards. The title is one line cut with "...", only the
+   review number is shown ("206", not "206 reviews"), the button fills the card width. */
+@media (width < 600px) {
+
+  /* Override default 40px min-height to match exact 33px design height */
+  .products .products-toolbar {
+    min-height: 33px;
+    margin-bottom: 16px;
+  }
+
+  /* Compact 14px text with tight line-height to fit inside 33px box */
+  .products .products-result-count {
+    font-size: 14px;
+    line-height: 1.15;
+    margin: 0;
+  }
+  .products .products-card {
+    gap: 10px;
+  }
+
+  .products .products-card-body {
+    gap: 5px;
+  }
+
+  .products .products-card-link {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .products .products-card-title {
+    font-size: 12px;
+  }
+
+  .products .products-card-rating {
+    gap: 12px;
+  }
+
+  .products .products-card-stars {
+    --star-size: 17px;
+  }
+
+  .products .products-card-reviews-word {
+    display: none;
+  }
+
+  .products .products-card-tryon {
+    align-self: stretch;
+    gap: 8px;
+    height: auto;
+    min-height: 44px;
+    margin-top: 0;
+    padding: 6px 8px;
+    font-size: 14px;
+    line-height: 1.1;
+    white-space: normal; /* a long label wraps instead of overflowing the card */
+    text-align: center;
+  }
+
+  .products .products-card-tryon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .products .products-card-image {
+    aspect-ratio: 160 / 224;
+  }
+}
+
+.products a.products-card-tryon {
+  text-decoration: none;
 }

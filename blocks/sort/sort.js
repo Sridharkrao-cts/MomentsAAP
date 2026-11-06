@@ -1,10 +1,12 @@
 /*
- * Sort block: the "Sort: Price: Low to High ▾" dropdown, plus the sort logic and
+ * Sort block: the "SORT BY ▾" dropdown, plus the sort logic and
  * shared sort state that the Products block imports.
  * Picking an option calls setSort -> "sort-changed" event; Products listens and re-orders.
  *
- * Authoring (optional): one cell with the initial sort, as a label or a value,
- * e.g. "Top Rated" or "price-desc". Empty or unknown -> the first option.
+ * Authoring: one row per dropdown option, in the order shown. Row 1 is the default
+ * (selected on page load). Known text ("top rated", "high to low", "low to high", ...)
+ * runs that sort; any other text is shown as written and sorts like row 1.
+ * See readOptions() for details and the older "Default | <sort>" format.
  */
 
 /* ================================================================== */
@@ -12,7 +14,7 @@
 /* ================================================================== */
 
 let productsCache = [];
-let currentJsonUrl = './dummy_products.json';
+//let currentJsonUrl = './dummy_products.json';
 
 export async function loadProductsData(jsonUrl) {
   if (jsonUrl && jsonUrl !== currentJsonUrl) {
@@ -69,25 +71,40 @@ const ratingOf = (p) => firstNumber(p.ratings, p.Rating) || 0;
 const ratersOf = (p) => firstNumber(p.reviews, p.No_of_Raters) || 0;
 
 /**
- * Sort options, in the order shown in the UI. The first one is the initial sort.
- * (`sortProductList` still accepts `default`, which keeps the sheet order.)
+ * Sort options, in the order shown in the UI.
+ * Any other value (e.g. `default`) keeps the sheet order. `rating` is an alias of
+ * `relevant`, kept for scripts such as test-sort.mjs.
  */
 export const SORT_OPTIONS = [
-  { value: 'price-asc', label: 'Price: Low to High' },
-  { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Top Rated' },
+  { value: 'price-asc', label: 'Price: Low to High', aliases: ['low-high', 'ascending', 'lowest'] },
+  { value: 'price-desc', label: 'Price: High to Low', aliases: ['high-low', 'descending', 'highest'] },
+  // Top Rated = highest rated first, lowest rated last (value stays 'relevant';
+  // "Relevant" is still accepted from authored content)
+  {
+    value: 'relevant',
+    label: 'Top Rated',
+    aliases: ['relevant', 'relevance', 'most relevant', 'rating', 'best rated', 'default'],
+  },
 ];
+
+const RATING_SORTS = ['relevant', 'rating'];
+
+/** Initial sort when the author gives no (valid) default. */
+export const DEFAULT_SORT = 'relevant';
 
 /**
  * Return a sorted copy of `list` (the input is never mutated).
  * Products without a price always go to the end of a price sort.
+ * Rating sort (Top Rated): highest rating first; equal ratings -> more reviews first;
+ * products without a rating count as 0, so they come last.
  */
 export function sortProductList(list, sortBy = 'default') {
   if (!Array.isArray(list)) return [];
-  if (!['price-asc', 'price-desc', 'rating'].includes(sortBy)) return [...list];
+  const byRating = RATING_SORTS.includes(sortBy);
+  if (!byRating && !['price-asc', 'price-desc'].includes(sortBy)) return [...list];
 
   return [...list].sort((a, b) => {
-    if (sortBy === 'rating') {
+    if (byRating) {
       return (ratingOf(b) - ratingOf(a)) || (ratersOf(b) - ratersOf(a));
     }
     const priceA = priceOf(a);
@@ -135,8 +152,13 @@ export function onSortChanged(handler) {
 /* 4. DROPDOWN UI                                                      */
 /* ================================================================== */
 
-const CHEVRON_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
-  + '<path d="M6 9l6 6 6-6"/></svg>';
+const CHEVRON_ICON = '<svg class="sort-chevron" viewBox="0 0 24 24"'
+  + ' aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
+
+/* Up/down arrows, shown instead of the text on mobile (round icon button) */
+const SORT_ICON = '<svg class="sort-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+  + '<path d="M7 21V3M7 3L3 7M7 3l4 4M17 3v18M17 21l-4-4M17 21l4-4"/>'
+  + '</svg>';
 
 const CHECK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
   + '<path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -144,15 +166,20 @@ const CHECK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false
 let sortMenuCount = 0; // unique ids when a page has more than one Sort block
 
 /**
- * "Sort: Price: Low to High ▾" pill that opens a themed list of options.
+ * "SORT BY ▾" button (round ⇅ icon on mobile) that opens a themed list of options.
  * A custom listbox instead of a native <select>, so the open list can be styled.
  * Mouse: click to open/choose, click outside to close.
  * Keyboard: Enter/Space/Arrows open; Arrows/Home/End move; Enter/Space choose; Escape/Tab close.
+ *
+ * `options`: [{ value, label, sortAs? }]. `sortAs` is the sort actually run (used by a
+ * custom authored option, which shows its own label but sorts like Top Rated).
+ * `onChange` receives the chosen option.
  */
-function buildSortMenu(initialValue, onChange) {
+function buildSortMenu(options, initialValue, onChange) {
   sortMenuCount += 1;
   const listId = `sort-list-${sortMenuCount}`;
-  let selected = Math.max(0, SORT_OPTIONS.findIndex((o) => o.value === initialValue));
+  const sortOf = (option) => option.sortAs || option.value;
+  let selected = Math.max(0, options.findIndex((o) => o.value === initialValue));
   let active = selected; // option highlighted while the list is open
 
   const sort = document.createElement('div');
@@ -164,7 +191,10 @@ function buildSortMenu(initialValue, onChange) {
   button.setAttribute('aria-haspopup', 'listbox');
   button.setAttribute('aria-expanded', 'false');
   button.setAttribute('aria-controls', listId);
-  button.innerHTML = '<span class="sort-label">Sort:</span>'
+  // Desktop shows "SORT BY ⌄"; mobile shows only the round ⇅ icon (CSS decides).
+  // The selected option is hidden visually but stays in the button, so screen
+  // readers announce e.g. "Sort by Price: Low to High".
+  button.innerHTML = `${SORT_ICON}<span class="sort-label">Sort by</span>`
     + `<span class="sort-value"></span>${CHEVRON_ICON}`;
   const valueEl = button.querySelector('.sort-value');
 
@@ -176,12 +206,15 @@ function buildSortMenu(initialValue, onChange) {
   list.tabIndex = -1;
   list.hidden = true;
 
-  const items = SORT_OPTIONS.map(({ value, label }) => {
+  const items = options.map(({ value, label }) => {
     const li = document.createElement('li');
     li.className = 'sort-option';
     li.id = `${listId}-${value}`;
     li.setAttribute('role', 'option');
-    li.innerHTML = `<span>${label}</span>${CHECK_ICON}`;
+    const text = document.createElement('span');
+    text.textContent = label; // authored text: never parsed as HTML
+    li.innerHTML = CHECK_ICON;
+    li.prepend(text);
     list.append(li);
     return li;
   });
@@ -194,7 +227,7 @@ function buildSortMenu(initialValue, onChange) {
 
   function updateSelected() {
     items.forEach((li, i) => li.setAttribute('aria-selected', String(i === selected)));
-    valueEl.textContent = SORT_OPTIONS[selected].label;
+    valueEl.textContent = ` ${options[selected].label}`; // leading space: "Sort by Price…"
   }
 
   function isOpen() {
@@ -205,15 +238,41 @@ function buildSortMenu(initialValue, onChange) {
     if (!sort.contains(e.target)) close(); // eslint-disable-line no-use-before-define
   }
 
+  /**
+   * The list opens right-aligned under the button. On small screens it can be wider
+   * than the space to the button's left, so nudge it back inside the screen.
+   */
+  const EDGE = 8; // px kept free between the list and the screen edge
+  function keepInViewport() {
+    list.style.right = '';
+    const { left, right } = list.getBoundingClientRect();
+    const screenWidth = document.documentElement.clientWidth;
+    if (left < EDGE) {
+      list.style.right = `${left - EDGE}px`; // negative right = move it rightwards
+    } else if (right > screenWidth - EDGE) {
+      list.style.right = `${right - (screenWidth - EDGE)}px`;
+    }
+  }
+
+  let openWidth = 0; // screen width when the list was opened
+  function onViewportChange() {
+    // Rotating / resizing would leave the list in the wrong place. Only the width
+    // matters: phones also fire "resize" when the address bar hides while scrolling.
+    if (document.documentElement.clientWidth !== openWidth) close(); // eslint-disable-line no-use-before-define
+  }
+
   function open() {
     if (isOpen()) return;
     active = selected;
     updateActive();
     list.hidden = false;
+    openWidth = document.documentElement.clientWidth;
+    keepInViewport();
     sort.classList.add('is-open');
     button.setAttribute('aria-expanded', 'true');
-    list.focus();
+    list.focus({ preventScroll: true }); // don't make the page jump on phones
     document.addEventListener('click', onOutsideClick);
+    window.addEventListener('resize', onViewportChange);
   }
 
   function close(returnFocus = false) {
@@ -222,6 +281,7 @@ function buildSortMenu(initialValue, onChange) {
     sort.classList.remove('is-open');
     button.setAttribute('aria-expanded', 'false');
     document.removeEventListener('click', onOutsideClick);
+    window.removeEventListener('resize', onViewportChange);
     if (returnFocus) button.focus();
   }
 
@@ -230,7 +290,7 @@ function buildSortMenu(initialValue, onChange) {
     selected = i;
     updateSelected();
     close(true);
-    if (changed) onChange(SORT_OPTIONS[i].value);
+    if (changed) onChange(options[i]);
   }
 
   list.addEventListener('mousemove', (e) => {
@@ -277,10 +337,11 @@ function buildSortMenu(initialValue, onChange) {
     }
   });
 
-  /** Show another option as selected, without calling onChange. */
+  /** Show the option for a sort that was set elsewhere, without calling onChange. */
   function setValue(value) {
-    const i = SORT_OPTIONS.findIndex((o) => o.value === value);
-    if (i < 0 || i === selected) return;
+    if (sortOf(options[selected]) === value) return; // already showing it (e.g. custom option)
+    const i = options.findIndex((o) => sortOf(o) === value);
+    if (i < 0) return;
     selected = i;
     updateSelected();
   }
@@ -290,27 +351,90 @@ function buildSortMenu(initialValue, onChange) {
   return { element: sort, setValue };
 }
 
-/** Initial sort authored in the block (label or value), or null. */
-function readInitialSort(block) {
-  const text = block.textContent.trim().toLowerCase();
-  if (!text) return null;
+/**
+ * Forgiving match. Case, spaces, punctuation and filler words ("price", "rate", "cost",
+ * "sort", "by") are ignored, so "High to Low", "price: high to low", "rate-high to low"
+ * and "price-desc" all give 'price-desc'.
+ */
+const FILLER = /\b(price|prices|rate|rates|cost|sort|by)\b/g;
+const squash = (text) => text.toLowerCase().replace(FILLER, ' ').replace(/[^a-z]/g, '');
+
+/** Direction phrases found anywhere in the text, e.g. "Sort: high to low (₹)" */
+const PHRASES = [
+  ['hightolow', 'price-desc'],
+  ['lowtohigh', 'price-asc'],
+  ['toprated', 'relevant'],
+];
+
+function matchSort(text) {
+  const clean = squash(text);
+  if (!clean) return null;
   const match = SORT_OPTIONS.find(
-    ({ value, label }) => value === text || label.toLowerCase() === text,
+    ({ value, label, aliases = [] }) => [value, label, ...aliases].some((t) => squash(t) === clean),
   );
-  return match ? match.value : null;
+  if (match) return match.value;
+  const phrase = PHRASES.find(([words]) => clean.includes(words));
+  return phrase ? phrase[1] : null;
+}
+
+const cellText = (cell) => (cell ? cell.textContent.trim().replace(/\s+/g, ' ') : '');
+
+/**
+ * The dropdown options authored in the block, in authored order.
+ *
+ *   | sort         |
+ *   | top rated    |  <- row 1 = the default: selected on page load
+ *   | high to low  |  <- every other row = one more option
+ *   | low to high  |
+ *   | Best Sellers |  <- not a known sort: shown as written, sorts like row 1
+ *
+ * Each option: { value (unique id), label (authored text), sortAs (sort to run) }.
+ * Known text runs its own sort; unknown text runs the first row's sort (Top Rated if the
+ * first row is unknown too).
+ *
+ * Older format still works: a single "Default | <sort>" row (or an empty block) gives the
+ * built-in options, with that sort first.
+ */
+function readOptions(block) {
+  const rows = [...block.querySelectorAll(':scope > div')]
+    .map((row) => [...row.querySelectorAll(':scope > div')]);
+
+  const legacy = rows.find(
+    (cells) => cells.length > 1 && cellText(cells[0]).toLowerCase() === 'default',
+  );
+  let texts = rows.filter((cells) => cells !== legacy)
+    .map((cells) => cellText(cells[0]))
+    .filter(Boolean);
+
+  if (!texts.length) {
+    // Old "Default | <sort>" format / empty block: built-in options, default first
+    const preferred = legacy ? cellText(legacy[1]) : '';
+    const builtIns = SORT_OPTIONS.map((o) => o.label);
+    const first = preferred || SORT_OPTIONS.find((o) => o.value === DEFAULT_SORT).label;
+    const firstSort = matchSort(first);
+    texts = [first, ...builtIns.filter((label) => !firstSort || matchSort(label) !== firstSort)];
+  }
+
+  const defaultSort = matchSort(texts[0]) || DEFAULT_SORT;
+  return texts.map((label, i) => ({
+    value: `opt-${i}-${squash(label) || 'sort'}`,
+    label,
+    sortAs: matchSort(label) || defaultSort,
+  }));
 }
 
 export default function decorate(block) {
   const current = getCurrentSort();
-  const known = SORT_OPTIONS.some(({ value }) => value === current);
-  const initial = readInitialSort(block) || (known ? current : SORT_OPTIONS[0].value);
+  const options = readOptions(block);
   block.textContent = '';
 
-  const menu = buildSortMenu(initial, setSort);
+  // Row 1 is the default: selected and applied when the page loads
+  const [first] = options;
+  const menu = buildSortMenu(options, first.value, (option) => setSort(option.sortAs));
   block.append(menu.element);
 
   // Tell blocks that are already listening (e.g. Products) which order to start with
-  if (initial !== current) setSort(initial);
+  if (first.sortAs !== current) setSort(first.sortAs);
 
   // Keep the button in sync if something else changes the sort
   onSortChanged((value) => menu.setValue(value));
