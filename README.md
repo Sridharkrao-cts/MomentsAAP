@@ -1,20 +1,34 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Your Project's Title...
+Your project's description...
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+## Environments
+- Preview: https://main--Acc3-varshini--varshinikumar765.aem.page/
+- Live: https://main--Acc3-varshini--varshinikumar765.aem.live/
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Documentation
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+Before using the aem-boilerplate, we recommend you to go through the documentation on https://www.aem.live/docs/ and more specifically:
+1. [Developer Tutorial](https://www.aem.live/developer/tutorial)
+2. [The Anatomy of a Project](https://www.aem.live/developer/anatomy-of-a-project)
+3. [Web Performance](https://www.aem.live/developer/keeping-it-100)
+4. [Markup, Sections, Blocks, and Auto Blocking](https://www.aem.live/developer/markup-sections-blocks)
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Installation
+
+```sh
+npm i
+```
+
+## Linting
+
+```sh
+npm run lint
+```
+
+## Local development
+
+1. Create a new repository based on the `aem-boilerplate` template
+1. Add the [AEM Code Sync GitHub App](https://github.com/apps/aem-code-sync) to the repository
+1. Install the [AEM CLI](https://github.com/adobe/helix-cli): `npm install -g @adobe/aem-cli`
+1. Start AEM Proxy: `aem up` (opens your browser at `http://localhost:3000`)
+1. Open the `Acc3-varshini` directory in your favorite IDE and start coding :)

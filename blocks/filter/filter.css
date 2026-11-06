@@ -1,0 +1,306 @@
+/* Filter block — every selector starts with .filter so nothing leaks to other blocks. */
+
+.filter {
+  --filter-accent: #ff7a4d;
+  --filter-ink: #111;
+  --filter-muted: #6b6b6b;
+  --filter-line: #d9d9d9;
+  --filter-bg: #f4f5f9; /* grey card behind the filters */
+  --filter-radius: 3px;
+
+  color: var(--filter-ink);
+  font-size: 15px;
+}
+
+/* ---------- Mobile toggle: "Filters [icon]" pill (hidden on desktop) ---------- */
+.filter .filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border: 1px solid var(--filter-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--filter-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.filter .filter-toggle[aria-expanded='true'] { border-color: var(--filter-ink); }
+
+.filter .filter-toggle:focus-visible {
+  outline: 2px solid var(--filter-ink);
+  outline-offset: 2px;
+}
+
+.filter .filter-toggle-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.filter .filter-badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--filter-accent);
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+}
+
+.filter .filter-badge[hidden] { display: none; }
+
+.filter:not(.is-open) .filter-panel { display: none; }
+
+/* The grey card. On mobile it opens under the Filters button. */
+.filter .filter-panel {
+  margin-top: 12px;
+  padding: 24px 20px;
+  border-radius: 16px;
+  background: var(--filter-bg);
+}
+
+/* ---------- Groups ---------- */
+.filter .filter-form { display: grid; gap: 28px; }
+
+.filter .filter-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filter .filter-title {
+  padding: 0;
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.filter .filter-options-check,
+.filter .filter-options-swatch {
+  display: grid;
+  gap: 14px;
+}
+
+.filter .filter-options-pill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 8px;
+}
+
+/* ---------- Square checkboxes (Category + Color) ---------- */
+.filter .filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.filter .filter-option input {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1.5px solid #555;
+  border-radius: var(--filter-radius);
+  background: #fff;
+  cursor: pointer;
+}
+
+.filter .filter-option input:checked {
+  border-color: var(--filter-accent);
+  background: var(--filter-accent);
+}
+
+.filter .filter-option input:checked::after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  border-bottom: 2px solid #fff;
+  border-left: 2px solid #fff;
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.filter .filter-option input:focus-visible,
+.filter .filter-pill input:focus-visible + .filter-pill-text {
+  outline: 2px solid var(--filter-ink);
+  outline-offset: 2px;
+}
+
+.filter .filter-count { color: var(--filter-muted); }
+
+.filter .filter-swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--swatch, #ccc);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 20%); /* keeps the white dot visible */
+}
+
+/* ---------- Size pills ---------- */
+.filter .filter-pill { position: relative; cursor: pointer; }
+
+.filter .filter-pill input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.filter .filter-pill-text {
+  display: inline-grid;
+  place-content: center;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: var(--filter-ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filter .filter-pill input:checked + .filter-pill-text { background: var(--filter-accent); }
+
+/* ---------- Dual price slider ---------- */
+.filter .price-slider {
+  --lo: 0%;
+  --hi: 100%;
+
+  position: relative;
+  height: 24px;
+}
+
+/* Track is inset by half a thumb (8px) so the orange fill lines up with the thumbs. */
+.filter .price-track {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  left: 8px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--filter-line);
+  transform: translateY(-50%);
+}
+
+.filter .price-track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--lo);
+  right: calc(100% - var(--hi));
+  background: var(--filter-accent);
+}
+
+/* Two range inputs stacked on top of each other; only the thumbs catch the mouse. */
+.filter .price-slider input[type='range'] {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.filter .price-slider input[type='range']::-webkit-slider-runnable-track {
+  height: 24px;
+  background: transparent;
+}
+
+.filter .price-slider input[type='range']::-moz-range-track {
+  height: 24px;
+  background: transparent;
+}
+
+.filter .price-slider input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  border: 3px solid var(--filter-accent);
+  border-radius: 50%;
+  background: #fff;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.filter .price-slider input[type='range']::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--filter-accent);
+  border-radius: 50%;
+  background: #fff;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.filter .price-slider input[type='range']:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--filter-ink);
+  outline-offset: 2px;
+}
+
+.filter .price-slider input[type='range']:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--filter-ink);
+  outline-offset: 2px;
+}
+
+.filter .price-values {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+/* ---------- Clear button ---------- */
+.filter .filter-clear {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--filter-ink);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.filter .filter-clear:disabled {
+  color: var(--filter-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* ---------- Desktop: always-open sidebar ---------- */
+@media (width >= 900px) {
+  /* The block fills its grid cell so the grey card is as tall as the product grid. */
+  .filter {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .filter .filter-toggle { display: none; }
+
+  .filter:not(.is-open) .filter-panel,
+  .filter .filter-panel {
+    display: block;
+    flex: 1;
+    margin-top: 0;
+  }
+}
