@@ -2,8 +2,8 @@
 Your project's description...
 
 ## Environments
-- Preview: https://main--Acc3-varshini--varshinikumar765.aem.page/
-- Live: https://main--Acc3-varshini--varshinikumar765.aem.live/
+- Preview: https://main--Accelerator3-Cognizant--AAP.aem.page/
+- Live: https://main--Accelerator3-Cognizant--AAP.aem.live/
 
 ## Documentation
 
